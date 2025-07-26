@@ -1,0 +1,109 @@
+OmniStore Project Overview (Kotlin + Gradle + Multi-Repo)
+Repositories / Microservices
+gateway-service
+API Gateway with Spring Cloud Gateway; routes HTTP + WebSocket; JWT validation; rate limiting; CORS; HTTPS termination.
+
+auth-service
+Auth server issuing RSA-signed JWT tokens; /login, /register, /refresh endpoints; Kotlin + Spring Boot.
+
+user-service
+User CRUD + role management; PostgreSQL; validates JWT using public key; hexagonal architecture.
+
+catalog-service
+Product catalog; Cassandra DB; emits product domain events.
+
+event-store-service
+Event sourcing + audit logs in Cassandra; Kafka event publishing.
+
+collaboration-service
+Real-time WebSocket chat & shared carts; Redis Pub/Sub internally; JWT-secured WebSocket handshake.
+
+admin-dashboard-service
+Live metrics, logs, events aggregation; pushes updates via WebSocket.
+
+shared-kernel
+Shared DTOs, enums, utilities for consistent domain modeling.
+
+deploy
+Docker Compose + Kubernetes manifests for local and prod deployment.
+
+Architecture per Microservice
+domain/
+Entities, value objects, domain events
+
+application/
+Use case interfaces (ports/in), service implementations
+
+infrastructure/
+Persistence, messaging, security, WebSocket adapters
+
+web/
+REST controllers, WebSocket handlers
+
+Security
+JWT signed by auth-service (RSA private key)
+
+All services validate JWT via public key (in public.pem)
+
+Gateway performs initial JWT validation & forwards tokens downstream
+
+Role-based access control via JWT claims
+
+WebSocket handshake requires valid JWT token
+
+Spring Security OAuth2 Resource Server in each microservice for JWT validation
+
+Messaging & Eventing
+Kafka or RabbitMQ for domain event streaming
+
+event-store-service persists events
+
+Other services listen and react (cache updates, notifications, analytics)
+
+WebSocket Integration
+collaboration-service manages real-time chat and sync via WebSocket + Redis Pub/Sub
+
+admin-dashboard-service streams live data to admin UI over WebSocket
+
+Gateway routes WebSocket connections and handles JWT auth at handshake
+
+Use STOMP protocol for subscription management
+
+Databases Overview
+Service	Database
+user-service	PostgreSQL
+catalog-service	Cassandra
+event-store-service	Cassandra
+collaboration-service	Redis
+cache-service	Redis
+activity-service	MongoDB
+
+Typical Request Flow Examples
+User CRUD: Client → Gateway (validate JWT) → user-service → PostgreSQL
+
+Product Update: catalog-service emits event → Kafka → notification-service pushes WebSocket updates
+
+Collaborative Chat: Client WS → Gateway WS → collaboration-service WS → Redis Pub/Sub → other clients
+
+Admin Dashboard: Kafka events → admin-dashboard-service → WebSocket → Admin UI
+
+Gradle Build
+Each service has its own build.gradle.kts (Kotlin DSL)
+
+Dependencies include Spring Boot, Spring Security, Spring Data, Kafka/RabbitMQ clients, WebSocket, etc.
+
+shared-kernel published as a local/internal library and imported by other services
+
+Folder Structure (per microservice)
+css
+
+service-name/
+├── src/main/kotlin/com/omnishop/service/
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   └── web/
+├── src/main/resources/
+│   └── application.yml
+├── build.gradle.kts
+└── Dockerfile
