@@ -1,0 +1,47 @@
+services:
+  omni-store-user-db:
+    image: postgres:15
+    container_name: omni-store-user-db
+    restart: always
+    environment:
+      POSTGRES_DB: omni_store_user_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5443:5432"
+    networks:
+      - omni-store-nt
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d omni_store_user_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  omni-store-user-service:
+    image: omni-store-user-service
+    build:
+      context: ./omni-store-user-service
+      dockerfile: Dockerfile
+    container_name: omni-store-user-service
+    environment:
+      POSTGRES_USER_DB: omni-store-user-db
+      POSTGRES_USER_USERNAME: user
+      POSTGRES_USER_PASS: pass
+      POSTGRES_USER_SERVICE: omni-store-user-service
+      POSTGRES_USER_PORT: 5443
+      SGBD: postgresql
+      SGBD_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SGBD_DRIVER: org.postgresql.Driver
+    ports:
+      - "8081:8081"
+    depends_on:
+      - omni-store-user-db
+    networks:
+      - omni-store-nt
+networks:
+  omni-store-nt:
+    driver: bridge
+volumes:
+  pgdata: 
