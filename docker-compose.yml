@@ -26,16 +26,17 @@ services:
       dockerfile: Dockerfile
     container_name: omni-store-user-service
     environment:
-      POSTGRES_USER_DB: omni-store-user-db
+      POSTGRES_USER_DB: omni_store_user_db
       POSTGRES_USER_USERNAME: user
       POSTGRES_USER_PASS: pass
-      POSTGRES_USER_SERVICE: omni-store-user-service
-      POSTGRES_USER_PORT: 5443
+      POSTGRES_USER_SERVICE: omni-store-user-db
+      POSTGRES_USER_PORT: 5432
       SGBD: postgresql
       SGBD_DIALECT: org.hibernate.dialect.PostgreSQLDialect
       SGBD_DRIVER: org.postgresql.Driver
     ports:
       - "8081:8081"
+      - "5005:5005"
     depends_on:
       - omni-store-user-db
     networks:
